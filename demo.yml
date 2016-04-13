@@ -2,11 +2,13 @@ resources:
 - name: often
   type: time
   source: {interval: 1m}
-- name: github/avh4/concourse-demo
+- name: github:avh4:concourse-demo
   type: git
   source:
     uri: https://github.com/avh4/concourse-demo
     branch: master
+- name: hello-world
+  type: string
 
 jobs:
 - name: hello-world
@@ -20,13 +22,30 @@ jobs:
       run:
         path: echo
         args: ["Hello, world!"]
+  - put: hello-world
 - name: tests
   plan:
-    - get: github/avh4/concourse-demo
+    - get: github:avh4:concourse-demo
       trigger: true
-    - task: rspec
+    - task: ci.sh
+      config:
+        inputs:
+          - name: github:avh4:concourse-demo
+        platform: linux
+        image: "docker:///ubuntu"
+        run:
+          path: github:avh4:concourse-demo/ci.sh
+- name: deploy
+  serial: true
+  plan:
+    - aggregate:
+      - get: github:avh4:concourse-demo
+        passed: [tests]
+      - get: hello-world
+    - task: say-deploy
       config:
         platform: linux
         image: "docker:///ubuntu"
         run:
-          path: ci.sh
+          path: echo
+          args: ["Deployed!"]
