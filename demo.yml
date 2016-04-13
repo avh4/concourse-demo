@@ -18,7 +18,7 @@ jobs:
   - task: say-hello
     config:
       platform: linux
-      image: "docker:///ubuntu"
+      image: "docker:///ruby"
       run:
         path: echo
         args: ["Hello, world!"]
